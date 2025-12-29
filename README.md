@@ -116,3 +116,19 @@ Returns articles matching the keyword with highlighting.
 - **CORS Errors**: Ensure you have restarted the backend after any configuration changes. Running the frontend via `python3 -m http.server` resolves most file-system CORS issues.
 - **No Data**: Check `rss_crawler.py` output. If it successfully sent messages, check the middleware logs for "Received message".
 - **Kafka Connection**: Ensure `docker-compose` is running and port `9094` is accessible.
+
+## Future Architecture Evolution
+
+To transition from a "Middleware Demo" to a **PB-level Production System**, the following architectural upgrades are planned:
+
+### 1. Storage Backend: MongoDB -> HBase
+- **Reason**: While MongoDB is excellent for documents, **HBase** (on HDFS) provides superior write throughput and scalability for massive datasets (PB scale).
+- **Design**: Use HBase as the permanent "Cold Store" and "Source of Truth". RowKeys will be designed based on `reverse_timestamp + article_id` to optimize for time-range scans.
+
+### 2. Synchronization: Dual-Write -> Binlog CDC (Change Data Capture)
+- **Reason**: The current "Dual-Write" strategy (Java code writing to both DB and ES) couples business logic with synchronization logic.
+- **Design**:
+    - **Step 1**: Business code only writes to the Primary DB (MySQL/HBase).
+    - **Step 2**: A CDC component (e.g., **Canal** or **Flink CDC**) listens to the database logs (Binlog/WAL).
+    - **Step 3**: Changes are streamed into Kafka -> Elasticsearch.
+- **Benefit**: Zero code intrusion, lower latency, and guaranteed "at-least-once" delivery.
