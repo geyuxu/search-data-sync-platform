@@ -62,17 +62,70 @@ services:
     networks:
       - search-net
 
-  mongo:
-    image: mongo:latest
-    container_name: sdsp-mongo
+  # 1. Storage Backend (Source of Truth)
+  mysql:
+    image: mysql:8.0
+    container_name: sdsp-mysql
     ports:
-      - "27017:27017"
+      - "3306:3306"
     environment:
-      - MONGO_INITDB_DATABASE=search_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: search_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    # Enable Binlog for Debezium
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
     networks:
       - search-net
     volumes:
-      - mongo_data:/data/db
+      - mysql_data:/var/lib/mysql
+
+  # 2. CDC Connector (Debezium / Kafka Connect)
+  connect:
+    image: debezium/connect:2.4
+    container_name: sdsp-connect
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: my_connect_configs
+      OFFSET_STORAGE_TOPIC: my_connect_offsets
+      STATUS_STORAGE_TOPIC: my_connect_statuses
+      # Simplify for demo
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    depends_on:
+      - kafka
+      - mysql
+    networks:
+      - search-net
+
+  # 3. Observability (SkyWalking)
+  oap:
+    image: apache/skywalking-oap-server:9.5.0
+    container_name: sdsp-oap
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    networks:
+      - search-net
+
+  ui:
+    image: apache/skywalking-ui:9.5.0
+    container_name: sdsp-ui
+    ports:
+      - "8088:8080"
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800
+    depends_on:
+      - oap
+    networks:
+      - search-net
 
 networks:
   search-net:
@@ -80,4 +133,4 @@ networks:
 
 volumes:
   es_data:
-  mongo_data:
+  mysql_data:

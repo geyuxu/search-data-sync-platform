@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories(basePackages = "com.example.searchmiddleware.repository.es")
-@org.springframework.data.mongodb.repository.config.EnableMongoRepositories(basePackages = "com.example.searchmiddleware.repository.mongo")
+@org.springframework.data.jpa.repository.config.EnableJpaRepositories(basePackages = "com.example.searchmiddleware.repository.jpa")
 public class SearchMiddlewareApplication {
 
     public static void main(String[] args) {

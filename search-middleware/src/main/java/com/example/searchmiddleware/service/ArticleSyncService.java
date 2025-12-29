@@ -2,7 +2,7 @@ package com.example.searchmiddleware.service;
 
 import com.example.searchmiddleware.model.Article;
 import com.example.searchmiddleware.repository.es.ArticleEsRepository;
-import com.example.searchmiddleware.repository.mongo.ArticleMongoRepository;
+import com.example.searchmiddleware.repository.jpa.ArticleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,7 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 @RequiredArgsConstructor
 public class ArticleSyncService {
 
-    private final ArticleMongoRepository mongoRepository;
+    private final ArticleRepository mysqlRepository;
     private final ArticleEsRepository esRepository;
 
     private final BlockingQueue<Article> buffer = new LinkedBlockingQueue<>();
@@ -44,13 +44,15 @@ public class ArticleSyncService {
             try {
                 log.info("Flushing {} articles...", articlesToSave.size());
 
-                // 1. Save to MongoDB (Source of Truth)
-                List<Article> savedArticles = mongoRepository.saveAll(articlesToSave);
+                // 1. Save to MySQL (Source of Truth)
+                // Note: Phase 2 - We introduced CDC.
+                // Now this service ONLY writes to MySQL.
+                // The CdcConsumer will handle the sync to ES asynchronously.
+                List<Article> savedArticles = mysqlRepository.saveAll(articlesToSave);
 
-                // 2. Index to Elasticsearch
-                esRepository.saveAll(savedArticles);
+                // esRepository.saveAll(savedArticles); <--- REMOVED DUAL WRITE
 
-                log.info("Successfully flushed {} articles to Mongo and ES.", savedArticles.size());
+                log.info("Flushed {} articles to MySQL. CDC will sync to ES.", savedArticles.size());
             } catch (Exception e) {
                 log.error("Error during flush", e);
                 // TODO: Handle failure (e.g., retry or dead letter queue)
@@ -59,7 +61,7 @@ public class ArticleSyncService {
     }
 
     public synchronized String rebuildIndex() {
-        log.info("Starting full index rebuild from MongoDB...");
+        log.info("Starting full index rebuild from MySQL...");
         long count = 0;
         try {
             esRepository.deleteAll(); // Dictionary clear (Danger!)
@@ -69,7 +71,7 @@ public class ArticleSyncService {
             org.springframework.data.domain.Page<Article> articlePage;
 
             do {
-                articlePage = mongoRepository.findAll(org.springframework.data.domain.PageRequest.of(page, size));
+                articlePage = mysqlRepository.findAll(org.springframework.data.domain.PageRequest.of(page, size));
                 List<Article> content = articlePage.getContent();
                 if (!content.isEmpty()) {
                     // Sanitize dates for ES
