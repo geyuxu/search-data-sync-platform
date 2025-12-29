@@ -129,7 +129,7 @@ services:
 
   search-middleware:
     build: ./search-middleware
-    container_name: sdsp-middleware
+    container_name: sdsp-app-middleware
     depends_on:
       - kafka
       - elasticsearch
@@ -145,7 +145,7 @@ services:
 
   search-frontend:
     build: ./search-frontend
-    container_name: sdsp-frontend
+    container_name: sdsp-app-frontend
     ports:
       - "3000:80"
     networks:
@@ -155,7 +155,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.crawler
-    container_name: sdsp-rss-crawler
+    container_name: sdsp-app-rss-crawler
     depends_on:
       - kafka
     environment:
