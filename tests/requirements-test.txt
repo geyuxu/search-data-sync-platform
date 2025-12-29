@@ -1,0 +1,5 @@
+pytest
+kafka-python
+requests
+mysql-connector-python
+elasticsearch<8.0.0

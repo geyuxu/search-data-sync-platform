@@ -36,16 +36,15 @@ public class SearchController {
 
     @GetMapping("/search")
     public List<Article> search(@RequestParam String q) {
-        Criteria criteria = new Criteria("title").contains(q)
-                .or(new Criteria("summary").contains(q));
+        Criteria criteria = new Criteria("title").matches(q)
+                .or(new Criteria("summary").matches(q));
 
         Query query = new CriteriaQuery(criteria);
 
         // Add highlighting
         HighlightField titleHighlight = new HighlightField("title");
-        HighlightField summaryHighlight = new HighlightField("summary");
         query.setHighlightQuery(
-                new HighlightQuery(new Highlight(List.of(titleHighlight, summaryHighlight)), Article.class));
+                new HighlightQuery(new Highlight(List.of(titleHighlight)), Article.class));
 
         SearchHits<Article> searchHits = elasticsearchOperations.search(query, Article.class);
 
@@ -55,9 +54,6 @@ public class SearchController {
                     // Replace content with highlights if available
                     if (hit.getHighlightFields().containsKey("title")) {
                         article.setTitle(String.join("...", hit.getHighlightFields().get("title")));
-                    }
-                    if (hit.getHighlightFields().containsKey("summary")) {
-                        article.setSummary(String.join("...", hit.getHighlightFields().get("summary")));
                     }
                     return article;
                 })

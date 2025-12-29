@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,26 +14,27 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-50 min-h-screen font-sans text-gray-800">
 
     <div id="app" class="container mx-auto px-4 py-12 max-w-3xl">
-        
+
         <!-- Search Header -->
-        <div class="flex flex-col items-center mb-12 transition-all duration-500" :class="{ 'mt-20': !hasSearched, 'mt-0': hasSearched }">
+        <div class="flex flex-col items-center mb-12 transition-all duration-500"
+            :class="{ 'mt-20': !hasSearched, 'mt-0': hasSearched }">
             <h1 class="text-4xl font-bold mb-8 text-gray-700 select-none" v-if="!hasSearched">Search</h1>
-            
+
             <div class="relative w-full max-w-xl">
                 <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                 </div>
-                <input 
-                    type="text" 
-                    v-model="query" 
-                    @keyup.enter="performSearch"
-                    class="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 rounded-full bg-white shadow-sm focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow hover:shadow-md" 
-                    placeholder="Search anything..." 
-                    autofocus
-                >
+                <input type="text" v-model="query" @keyup.enter="performSearch"
+                    class="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 rounded-full bg-white shadow-sm focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow hover:shadow-md"
+                    placeholder="Search anything..." autofocus>
             </div>
         </div>
 
@@ -48,12 +50,15 @@
 
         <!-- Results List -->
         <div v-if="results.length > 0" class="space-y-6">
-            <div v-for="article in results" :key="article.id" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div v-for="article in results" :key="article.id"
+                class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                 <a :href="article.link" target="_blank" class="group">
-                    <h2 class="text-xl text-blue-600 font-medium mb-1 group-hover:underline" v-html="article.title || 'No Title'"></h2>
+                    <h2 class="text-xl text-blue-600 font-medium mb-1 group-hover:underline"
+                        v-html="article.title || 'No Title'"></h2>
                     <p class="text-sm text-green-700 mb-2 truncate">{{ article.link }}</p>
                 </a>
-                <p class="text-gray-600 text-sm leading-relaxed" v-html="article.summary || 'No summary available.'"></p>
+                <p class="text-gray-600 text-sm leading-relaxed"
+                    v-html="decodeHtml(article.summary || 'No summary available.')"></p>
                 <div class="mt-2 text-xs text-gray-400 flex justify-between items-center">
                     <span>{{ formatDate(article.publishedDate) }}</span>
                     <span v-if="article.author !== 'unknown'">By {{ article.author }}</span>
@@ -64,7 +69,7 @@
     </div>
 
     <script>
-        const { createApp, ref } = Vue
+        const { createApp, ref, onMounted } = Vue
 
         createApp({
             setup() {
@@ -73,13 +78,39 @@
                 const loading = ref(false)
                 const hasSearched = ref(false)
 
+                // Helper to unescape HTML entities
+                const decodeHtml = (html) => {
+                    const txt = document.createElement("textarea");
+                    txt.innerHTML = html;
+                    return txt.value;
+                }
+
+                const loadRecent = async () => {
+                    loading.value = true
+                    try {
+                        const response = await fetch('http://localhost:8080/api/recent?limit=10')
+                        if (response.ok) {
+                            results.value = await response.json()
+                        }
+                    } catch (e) {
+                        console.error("Failed to load recent items", e)
+                    } finally {
+                        loading.value = false
+                    }
+                }
+
                 const performSearch = async () => {
-                    if (!query.value.trim()) return;
-                    
+                    if (!query.value.trim()) {
+                        // If empty query, reload recent
+                        await loadRecent();
+                        hasSearched.value = false;
+                        return;
+                    }
+
                     loading.value = true
                     hasSearched.value = true
                     results.value = []
-                    
+
                     try {
                         const response = await fetch(`http://localhost:8080/api/search?q=${encodeURIComponent(query.value)}`)
                         if (!response.ok) {
@@ -107,16 +138,22 @@
                     }
                 }
 
+                onMounted(() => {
+                    loadRecent()
+                })
+
                 return {
                     query,
                     results,
                     loading,
                     hasSearched,
                     performSearch,
-                    formatDate
+                    formatDate,
+                    decodeHtml
                 }
             }
         }).mount('#app')
     </script>
 </body>
+
 </html>

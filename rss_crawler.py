@@ -3,9 +3,11 @@ import json
 import feedparser
 from kafka import KafkaProducer
 
+import os
+
 # Configuration
 RSS_URL = "https://news.ycombinator.com/rss"  # Hacker News RSS
-KAFKA_BOOTSTRAP_SERVERS = ['localhost:9094']
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9094').split(',')
 KAFKA_TOPIC = 'news-raw'
 POLL_INTERVAL_SECONDS = 300  # 5 minutes
 

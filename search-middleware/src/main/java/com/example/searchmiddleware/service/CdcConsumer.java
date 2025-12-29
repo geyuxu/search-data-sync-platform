@@ -21,7 +21,10 @@ public class CdcConsumer {
     public void handleCdcEvent(String message) {
         try {
             JsonNode root = objectMapper.readTree(message);
-            JsonNode payload = root.path("payload");
+            JsonNode payload = root;
+            if (root.has("payload")) {
+                payload = root.path("payload");
+            }
             JsonNode after = payload.path("after");
             String op = payload.path("op").asText();
 
@@ -41,7 +44,7 @@ public class CdcConsumer {
                 Article article = objectMapper.convertValue(after, Article.class);
 
                 esRepository.save(article);
-                log.debug("CDC: Synced article {}", article.getId());
+                log.info("CDC: Synced article {}", article.getId());
             }
 
         } catch (Exception e) {
