@@ -44,6 +44,12 @@ graph TD;
     end
 ```
 
+## High Availability Topology
+The platform supports scaling for reliability:
+- **Kafka Connect**: Multiple workers (`connect`, `connect-2`) for fault-tolerant CDC streaming.
+- **Kibana**: multiple instances (`kibana`, `kibana-2`) behind the load balancer (simulated).
+- **Kafka**: Configured for distributed coordination (Zookeeper).
+
 ## System Requirements
 - **Java 17+**
 - **Docker & Docker Compose** (Allocates ~4GB RAM)
@@ -51,57 +57,40 @@ graph TD;
 
 ## Quick Start Guide
 
-### 1. Start Infrastructure
-Spin up MySQL, Kafka, Debezium, SkyWalking, and Elasticsearch.
+### 1. Start Full Infrastructure
+Launch the entire platform including Middleware, Frontend, Database, Message Queue, and Observability stack.
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
-*Wait ~30 seconds for services to initialize.*
+*Wait ~30-60 seconds for services to initialize.*
 
 ### 2. Register CDC Connector
-Tell Debezium to start monitoring the MySQL binary log.
+Tell Debezium to start monitoring the MySQL binary log and streaming changes to Kafka.
 
 ```bash
-chmod +x register_connector.sh
 ./register_connector.sh
 ```
 
-### 3. Setup Observability Agent
-Download the SkyWalking Java Agent.
+### 3. Usage
+**Frontend**: [http://localhost:3000](http://localhost:3000)
+- Search for "java" or "architecture".
+- View detailed summaries with HTML rendering.
+
+**Observability (SkyWalking)**: [http://localhost:8088](http://localhost:8088)
+- Login: `admin/admin`
+- View distributed traces from `SearchController` -> `Kafka` -> `CdcConsumer`.
+
+**Kibana**: [http://localhost:5601](http://localhost:5601)
+- Inspect Elasticsearch indices (`articles`).
+
+### 4. Run E2E Tests
+Verify the entire pipeline (Producer -> DB -> CDC -> Search) works correctly.
 
 ```bash
-chmod +x setup_agent.sh
-./setup_agent.sh
+pip3 install -r tests/requirements-test.txt
+python3 tests/e2e_test.py
 ```
-
-### 4. Run Middleware (With Tracing)
-Start the Spring Boot application with the SkyWalking agent attached.
-
-```bash
-export SW_AGENT_NAME=search-middleware
-export SW_AGENT_COLLECTOR_BACKEND_SERVICES=localhost:11800
-
-mvn -f search-middleware/pom.xml spring-boot:run -Dspring-boot.run.jvmArguments="-javaagent:$(pwd)/skywalking-agent/skywalking-agent.jar"
-```
-> API: `http://localhost:8080/api`
-> SkyWalking UI: `http://localhost:8088`
-
-### 5. Run Data Crawler
-Fetch RSS feeds and push to the pipeline.
-
-```bash
-pip3 install -r requirements.txt
-python3 rss_crawler.py
-```
-
-### 6. Frontend
-(Optional) Simple search UI.
-```bash
-cd search-frontend
-python3 -m http.server 3000
-```
-Visit: `http://localhost:3000`
 
 ## API Reference
 
