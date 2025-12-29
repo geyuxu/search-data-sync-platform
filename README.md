@@ -13,7 +13,7 @@ A high-performance middleware system that synchronizes external RSS data into a 
 ```mermaid
 graph TD
     %% Data Ingestion
-    subgraph Ingestion [Data Ingestion Layer]
+    subgraph Ingestion ["Data Ingestion Layer"]
         Crawler[Python RSS Crawler] -->|1. Fetch & Parse| RSS[RSS Feeds]
         Crawler -->|2. Produce JSON| Kafka(Kafka Topic: news-raw)
         style Crawler fill:#f9f,stroke:#333
@@ -21,11 +21,11 @@ graph TD
     end
 
     %% Middleware
-    subgraph Middleware [Search Middleware (Java Spring Boot)]
+    subgraph Middleware ["Search Middleware (Java Spring Boot)"]
         Consumer[Kafka Consumer] -->|3. Consume| Kafka
         Consumer -->|4. Normalize Date| Buffer[Memory Buffer]
         
-        subgraph SyncLogic [Sync Service]
+        subgraph SyncLogic ["Sync Service"]
             Buffer -->|5. Batch Drain| BatchProc[Batch Processor]
             BatchProc -->|6. Dual Write| DualWrite{Dual Write Strategy}
         end
@@ -36,7 +36,7 @@ graph TD
     end
 
     %% Storage Layer
-    subgraph Storage [Persistence Layer]
+    subgraph Storage ["Persistence Layer"]
         DualWrite -->|Save (Source of Truth)| Mongo[(MongoDB)]
         DualWrite -->|Index (Search View)| ES[(Elasticsearch)]
         style Mongo fill:#dfd,stroke:#333
@@ -44,7 +44,7 @@ graph TD
     end
 
     %% Presentation
-    subgraph Frontend [Presentation Layer]
+    subgraph Frontend ["Presentation Layer"]
         VueApp[Vue.js SPA] -->|7. Search Query| Controller[Search Controller]
         Controller -->|8. Query DSL| ES
     end
