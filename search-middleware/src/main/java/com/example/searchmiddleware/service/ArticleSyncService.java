@@ -72,6 +72,19 @@ public class ArticleSyncService {
                 articlePage = mongoRepository.findAll(org.springframework.data.domain.PageRequest.of(page, size));
                 List<Article> content = articlePage.getContent();
                 if (!content.isEmpty()) {
+                    // Sanitize dates for ES
+                    for (Article article : content) {
+                        if (article.getPublishedDate() != null) {
+                            try {
+                                java.time.ZonedDateTime zdt = java.time.ZonedDateTime.parse(article.getPublishedDate(),
+                                        java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME);
+                                article.setPublishedDate(
+                                        zdt.format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+                            } catch (Exception e) {
+                                // Already ISO or invalid, skip
+                            }
+                        }
+                    }
                     esRepository.saveAll(content);
                     count += content.size();
                     log.info("Re-indexed batch {} ({} records)", page, content.size());
