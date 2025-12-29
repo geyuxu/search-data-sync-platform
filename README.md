@@ -28,19 +28,34 @@ graph TD;
     end
 
     %% CDC Pipeline
-    subgraph CDC ["CDC Pipeline (Async)"]
-        MySQL -->|4. Binlog Row Change| Debezium[Debezium Connector]
-        Debezium -->|5. CDC Event| KafkaCDC(Topic: dbserver1.articles)
+    subgraph CDC ["CDC Pipeline (HA Architecture)"]
+        MySQL -->|4. Binlog| ConnectCluster
+        
+        subgraph ConnectCluster ["Kafka Connect (HA Cluster)"]
+            direction BT
+            C1[Connect Node 1]
+            C2[Connect Node 2]
+        end
+        
+        ConnectCluster -->|5. CDC Event| KafkaCDC(Topic: dbserver1.articles)
+        
         CdcConsumer[CDC Consumer] -->|6. Consume| KafkaCDC
         CdcConsumer -->|7. Index| ES[(Elasticsearch)]
-        style Debezium fill:#f96,stroke:#333
+        
+        style ConnectCluster fill:#f96,stroke:#333
         style ES fill:#9cf,stroke:#333
     end
 
-    %% Observability
-    subgraph Obs ["Observability"]
+    %% Observability & Vis
+    subgraph Obs ["Observability & Visualization"]
         SkyWalking[SkyWalking OAP] -.->|Trace| SyncService
         SkyWalking -.->|Trace| CdcConsumer
+        
+        ES -.-> KibanaCluster
+        subgraph KibanaCluster ["Kibana (HA Cluster)"]
+            K1[Kibana Node 1] ~~~ K2[Kibana Node 2]
+        end
+        style KibanaCluster fill:#fff,stroke:#333
     end
 ```
 
