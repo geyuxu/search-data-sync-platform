@@ -23,7 +23,7 @@ graph TD;
     %% Middleware Write Path
     subgraph Middleware ["Middleware (Write Path)"]
         SyncService[Sync Service] -->|2. Consume| KafkaRaw
-        SyncService -->|3. Write (Source of Truth)| MySQL[(MySQL 8.0)]
+        SyncService -->|3. Write| MySQL[(MySQL 8.0)]
         style MySQL fill:#dfd,stroke:#333
     end
 
