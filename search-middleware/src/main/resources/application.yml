@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: search-middleware
+  
+  kafka:
+    bootstrap-servers: 127.0.0.1:9094
+    consumer:
+      group-id: search-middleware-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/search_db
+      
+  elasticsearch:
+    uris: http://localhost:9200

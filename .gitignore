@@ -1,0 +1,27 @@
+# Java / Maven
+target/
+*.class
+.mvn/
+mvnw
+mvnw.cmd
+
+# NetBeans / IntelliJ / Eclipse
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# MacOS
+.DS_Store
+
+# Logs
+*.log

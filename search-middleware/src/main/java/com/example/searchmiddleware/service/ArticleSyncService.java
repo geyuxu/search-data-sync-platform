@@ -1,0 +1,89 @@
+package com.example.searchmiddleware.service;
+
+import com.example.searchmiddleware.model.Article;
+import com.example.searchmiddleware.repository.es.ArticleEsRepository;
+import com.example.searchmiddleware.repository.mongo.ArticleMongoRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class ArticleSyncService {
+
+    private final ArticleMongoRepository mongoRepository;
+    private final ArticleEsRepository esRepository;
+
+    private final BlockingQueue<Article> buffer = new LinkedBlockingQueue<>();
+    private static final int BATCH_SIZE = 5;
+
+    public void addToBuffer(Article article) {
+        buffer.offer(article);
+        if (buffer.size() >= BATCH_SIZE) {
+            flush();
+        }
+    }
+
+    @Scheduled(fixedRate = 1000)
+    public synchronized void flush() {
+        while (!buffer.isEmpty()) {
+            List<Article> articlesToSave = new ArrayList<>();
+            buffer.drainTo(articlesToSave, BATCH_SIZE);
+
+            if (articlesToSave.isEmpty()) {
+                break;
+            }
+
+            try {
+                log.info("Flushing {} articles...", articlesToSave.size());
+
+                // 1. Save to MongoDB (Source of Truth)
+                List<Article> savedArticles = mongoRepository.saveAll(articlesToSave);
+
+                // 2. Index to Elasticsearch
+                esRepository.saveAll(savedArticles);
+
+                log.info("Successfully flushed {} articles to Mongo and ES.", savedArticles.size());
+            } catch (Exception e) {
+                log.error("Error during flush", e);
+                // TODO: Handle failure (e.g., retry or dead letter queue)
+            }
+        }
+    }
+
+    public synchronized String rebuildIndex() {
+        log.info("Starting full index rebuild from MongoDB...");
+        long count = 0;
+        try {
+            esRepository.deleteAll(); // Dictionary clear (Danger!)
+
+            int page = 0;
+            int size = 100;
+            org.springframework.data.domain.Page<Article> articlePage;
+
+            do {
+                articlePage = mongoRepository.findAll(org.springframework.data.domain.PageRequest.of(page, size));
+                List<Article> content = articlePage.getContent();
+                if (!content.isEmpty()) {
+                    esRepository.saveAll(content);
+                    count += content.size();
+                    log.info("Re-indexed batch {} ({} records)", page, content.size());
+                }
+                page++;
+            } while (articlePage.hasNext());
+
+            log.info("Rebuild completed. Total records: {}", count);
+            return "Rebuild completed. Total records: " + count;
+        } catch (Exception e) {
+            log.error("Rebuild failed", e);
+            throw new RuntimeException("Rebuild failed", e);
+        }
+    }
+}
