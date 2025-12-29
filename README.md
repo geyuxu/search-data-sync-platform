@@ -11,19 +11,43 @@ A high-performance middleware system that synchronizes external RSS data into a 
 ## Architecture
 
 ```mermaid
-graph LR
-    A[Crawler (Python)] -->|JSON| B(Kafka Topic: news-raw)
-    
-    subgraph "Middleware (Java Spring Boot)"
-    C[Kafka Consumer] -->|Batch Fetch| B
-    D[Processing Logic] -->|Clean & Format| C
+graph TD
+    %% Data Ingestion
+    subgraph Ingestion [Data Ingestion Layer]
+        Crawler[Python RSS Crawler] -->|1. Fetch & Parse| RSS[RSS Feeds]
+        Crawler -->|2. Produce JSON| Kafka(Kafka Topic: news-raw)
+        style Crawler fill:#f9f,stroke:#333
+        style Kafka fill:#ff9,stroke:#333
     end
-    
-    D -->|Upsert| E[(MongoDB)]
-    D -->|Index| F[(Elasticsearch)]
-    
-    G[Frontend (Vue.js)] -->|Search API| H[REST Controller]
-    H -->|Query| F
+
+    %% Middleware
+    subgraph Middleware [Search Middleware (Java Spring Boot)]
+        Consumer[Kafka Consumer] -->|3. Consume| Kafka
+        Consumer -->|4. Normalize Date| Buffer[Memory Buffer]
+        
+        subgraph SyncLogic [Sync Service]
+            Buffer -->|5. Batch Drain| BatchProc[Batch Processor]
+            BatchProc -->|6. Dual Write| DualWrite{Dual Write Strategy}
+        end
+        
+        Admin[Admin Controller] -->|Admin: Rebuild Index| Reindexer[Re-index Logic]
+        Reindexer -->|Read Source| Mongo
+        Reindexer -->|Bulk Index| ES
+    end
+
+    %% Storage Layer
+    subgraph Storage [Persistence Layer]
+        DualWrite -->|Save (Source of Truth)| Mongo[(MongoDB)]
+        DualWrite -->|Index (Search View)| ES[(Elasticsearch)]
+        style Mongo fill:#dfd,stroke:#333
+        style ES fill:#9cf,stroke:#333
+    end
+
+    %% Presentation
+    subgraph Frontend [Presentation Layer]
+        VueApp[Vue.js SPA] -->|7. Search Query| Controller[Search Controller]
+        Controller -->|8. Query DSL| ES
+    end
 ```
 
 ## System Requirements
