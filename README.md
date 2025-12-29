@@ -1,4 +1,4 @@
-# Search Data Sync Platform (Principal Architect Edition)
+# Search Data Sync Platform
 
 A high-performance, **Event-Driven** search platform featuring **Change Data Capture (CDC)**, **Zero-Code Coupling**, and **Distributed Tracing**.
 
