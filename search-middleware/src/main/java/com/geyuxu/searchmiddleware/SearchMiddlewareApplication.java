@@ -1,4 +1,4 @@
-package com.example.searchmiddleware;
+package com.geyuxu.searchmiddleware;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,8 +6,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories(basePackages = "com.example.searchmiddleware.repository.es")
-@org.springframework.data.jpa.repository.config.EnableJpaRepositories(basePackages = "com.example.searchmiddleware.repository.jpa")
+@org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories(basePackages = "com.geyuxu.searchmiddleware.repository.es")
+@org.springframework.data.jpa.repository.config.EnableJpaRepositories(basePackages = "com.geyuxu.searchmiddleware.repository.jpa")
 public class SearchMiddlewareApplication {
 
     public static void main(String[] args) {

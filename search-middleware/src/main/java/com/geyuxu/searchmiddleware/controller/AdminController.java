@@ -1,6 +1,6 @@
-package com.example.searchmiddleware.controller;
+package com.geyuxu.searchmiddleware.controller;
 
-import com.example.searchmiddleware.service.ArticleSyncService;
+import com.geyuxu.searchmiddleware.service.ArticleSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;

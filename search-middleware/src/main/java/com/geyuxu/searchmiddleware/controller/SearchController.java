@@ -1,6 +1,6 @@
-package com.example.searchmiddleware.controller;
+package com.geyuxu.searchmiddleware.controller;
 
-import com.example.searchmiddleware.model.Article;
+import com.geyuxu.searchmiddleware.model.Article;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -10,7 +10,7 @@ import org.springframework.data.elasticsearch.core.query.HighlightQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
-import com.example.searchmiddleware.repository.es.ArticleEsRepository;
+import com.geyuxu.searchmiddleware.repository.es.ArticleEsRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

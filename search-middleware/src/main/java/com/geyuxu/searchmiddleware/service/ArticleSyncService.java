@@ -1,8 +1,8 @@
-package com.example.searchmiddleware.service;
+package com.geyuxu.searchmiddleware.service;
 
-import com.example.searchmiddleware.model.Article;
-import com.example.searchmiddleware.repository.es.ArticleEsRepository;
-import com.example.searchmiddleware.repository.jpa.ArticleRepository;
+import com.geyuxu.searchmiddleware.model.Article;
+import com.geyuxu.searchmiddleware.repository.es.ArticleEsRepository;
+import com.geyuxu.searchmiddleware.repository.jpa.ArticleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

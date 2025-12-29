@@ -1,4 +1,4 @@
-package com.example.searchmiddleware.model;
+package com.geyuxu.searchmiddleware.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

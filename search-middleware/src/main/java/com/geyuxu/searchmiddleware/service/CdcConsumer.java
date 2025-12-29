@@ -1,7 +1,7 @@
-package com.example.searchmiddleware.service;
+package com.geyuxu.searchmiddleware.service;
 
-import com.example.searchmiddleware.model.Article;
-import com.example.searchmiddleware.repository.es.ArticleEsRepository;
+import com.geyuxu.searchmiddleware.model.Article;
+import com.geyuxu.searchmiddleware.repository.es.ArticleEsRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
-package com.example.searchmiddleware.repository.es;
+package com.geyuxu.searchmiddleware.repository.es;
 
-import com.example.searchmiddleware.model.Article;
+import com.geyuxu.searchmiddleware.model.Article;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
 
