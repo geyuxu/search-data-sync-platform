@@ -38,7 +38,7 @@ graph TD;
     %% Storage Layer
     subgraph Storage ["Persistence Layer"]
         DualWrite -->|Save| Mongo[(MongoDB)]
-        DualWrite -->|Index (Search View)| ES[(Elasticsearch)]
+        DualWrite -->|Index| ES[(Elasticsearch)]
         style Mongo fill:#dfd,stroke:#333
         style ES fill:#9cf,stroke:#333
     end
