@@ -11,7 +11,7 @@ A high-performance middleware system that synchronizes external RSS data into a 
 ## Architecture
 
 ```mermaid
-graph TD
+graph TD;
     %% Data Ingestion
     subgraph Ingestion ["Data Ingestion Layer"]
         Crawler[Python RSS Crawler] -->|1. Fetch & Parse| RSS[RSS Feeds]
